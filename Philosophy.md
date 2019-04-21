@@ -28,3 +28,54 @@ http://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#p-philosophy
   到底 `++i` 會先運算呢？還是會先被拿來用在 `v[i]` ？ 避免這種未知行為的寫法會是比較好的選擇。
 
 * 注意會因實作定義而改變的constructs， e.g. `sizeof(int)`
+
+## P.3
+
+**表達意圖**
+
+除非一些程式碼的意圖有被敘述(e.g. **名稱**或**註解**)，不然無法判斷該程式碼有沒有正確做它該做的事
+
+e.g.
+
+```c++
+gsl::index i = 0;
+while (i < v.size()) {
+    // ... do something with v[i] ...
+}
+```
+
+這邊沒有表達出**只要**loop所有 `v` 的elements，而且
+1. 暴露了index的實作細節
+2. `i` 在loop外依舊存在，這有可能不是想要的，而讀者不會知道
+
+比較好的:
+
+```c++
+for (const auto& x : v) { /* do something with the value of x */ }
+```
+
+這樣就不會暴露iteration的機制，而且 `x` 被設定為 `v` 的elements的const reference，所以可以知道這個動作不會去改變 `v` 的elements。
+如果想要修改elements，可以寫成這樣：
+
+```c++
+for (auto& x : v) { /* modify x */ }
+```
+
+另外有時也可以使用 `for_each` 這種語意化的結構，它更直接地表達了意圖
+
+e.g.
+
+```c++
+for_each(par, v, [](int x) { /* do something with the value of x */ });
+```
+
+* 寫code原則：表達**該做什麼**，而不是**該怎麼做**
+* 有些結構可以更清楚的表達意圖
+
+  e.g.
+
+    ```c++
+    // 用兩個點畫一條線
+    draw_line(int, int, int, int); // 含糊
+    draw_line(Point, Point); // 清楚
+    ```
